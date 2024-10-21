@@ -1,6 +1,9 @@
-export const signUp = (req, res) => {
+import { Auth } from "../model/auth.model.js";
+
+export const signUp = async (req, res) => {
   const { email, password } = req.body;
 
+  // Validate the input
   if (!email || !password) {
     return res
       .status(400)
@@ -19,7 +22,22 @@ export const signUp = (req, res) => {
       .json({ message: "Password should be at least 6 characters" });
   }
 
-  res
-    .status(200)
-    .json({ message: "user data received wait for saving data coming soon  " });
+  try {
+    // Create a new user
+    const user = { email, password };
+
+    const resUser = await Auth.create(user); // Await the result of the async operation
+
+    // Send the response
+    res.status(201).json({
+      resUser,
+      message: "User data saved successfully.",
+    });
+  } catch (error) {
+    // Handle any errors that occur during the database operation
+    res.status(500).json({
+      message: "Error saving user data",
+      error: error.message,
+    });
+  }
 };
