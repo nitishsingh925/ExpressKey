@@ -1,4 +1,7 @@
 import { Auth } from "../model/auth.model.js";
+import bcryptjs from "bcryptjs";
+
+// Sign up
 
 export const signUp = async (req, res) => {
   const { email, password } = req.body;
@@ -23,6 +26,8 @@ export const signUp = async (req, res) => {
   }
 
   try {
+    const salt = await bcryptjs.genSalt(10);
+
     // Create a new user
     const user = { email, password };
 
@@ -41,6 +46,8 @@ export const signUp = async (req, res) => {
     });
   }
 };
+
+// Sign in
 
 export const signIn = async (req, res) => {
   const { email, password } = req.body;
