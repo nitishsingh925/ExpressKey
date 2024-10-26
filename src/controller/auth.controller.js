@@ -26,10 +26,12 @@ export const signUp = async (req, res) => {
   }
 
   try {
-    const salt = await bcryptjs.genSalt(10);
+    // Hash the password
+
+    const hashPassword = await bcryptjs.hash(password, 10);
 
     // Create a new user
-    const user = { email, password };
+    const user = { email, password: hashPassword };
 
     const resUser = await Auth.create(user); // Await the result of the async operation
 
@@ -64,7 +66,7 @@ export const signIn = async (req, res) => {
       res.status(404).json({ message: "User not found" });
     }
 
-    const isValidPassword = user.password === password;
+    const isValidPassword = await bcryptjs.compare(password, user.password);
 
     if (!isValidPassword) {
       res.status(400).json({ message: "Invalid password" });
