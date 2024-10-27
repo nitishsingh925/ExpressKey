@@ -72,6 +72,10 @@ export const signIn = async (req, res) => {
       res.status(400).json({ message: "Invalid password" });
     }
 
+    user.password = undefined;
+
+    // Send the response
+
     res.status(200).json({
       user,
       message: "User logged in successfully",
