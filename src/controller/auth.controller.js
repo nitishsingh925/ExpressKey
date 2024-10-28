@@ -1,5 +1,6 @@
 import { Auth } from "../model/auth.model.js";
 import bcryptjs from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 // Sign up
 
@@ -74,10 +75,25 @@ export const signIn = async (req, res) => {
 
     user.password = undefined;
 
+    // Generate a token
+
+    const playload = {
+      user: {
+        _id: user._id,
+        email: user.email,
+      },
+    };
+
+    const secret = process.env.JWT_SECRET;
+    const options = { expiresIn: "1d" };
+
+    const token = jwt.sign(playload, secret, options);
+
     // Send the response
 
     res.status(200).json({
       user,
+      token,
       message: "User logged in successfully",
     });
   } catch (error) {
