@@ -1,6 +1,7 @@
 import { Auth } from "../model/auth.model.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 
 // Sign up
 
@@ -88,6 +89,15 @@ export const signIn = async (req, res) => {
     const options = { expiresIn: "1d" };
 
     const token = jwt.sign(playload, secret, options);
+
+    // Set the token as a cookie
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60,
+      sameSite: "strict",
+      secure: true,
+    });
 
     // Send the response
 
