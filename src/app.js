@@ -9,6 +9,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/v1/auth", authRoute);
+
+// Protected Route
 app.use("/api/v1/home", AuthMiddleware, homeRoute);
 
 export { app };
