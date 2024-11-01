@@ -8,6 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Not Protected Route
 app.use("/api/v1/auth", authRoute);
 
 // Protected Route
