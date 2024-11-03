@@ -1,7 +1,7 @@
 import { Auth } from "../model/auth.model.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
+import crypto from "crypto";
 
 // Sign up
 
@@ -63,43 +63,41 @@ export const signIn = async (req, res) => {
   }
 
   try {
+    // Find user by email
     const user = await Auth.findOne({ email });
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
+    // Compare provided password with stored hash
     const isValidPassword = await bcryptjs.compare(password, user.password);
-
     if (!isValidPassword) {
-      res.status(400).json({ message: "Invalid password" });
+      return res.status(400).json({ message: "Invalid password" });
     }
 
-    user.password = undefined;
+    user.password = undefined; // Omit password from the response
 
-    // Generate a token
+    // Generate a unique session ID and save it to the user
+    const sessionId = crypto.randomUUID();
+    user.sessionId = sessionId;
+    await user.save();
 
-    const playload = {
-      user: {
-        _id: user._id,
-        email: user.email,
-      },
+    // Create JWT with sessionId
+    const payload = {
+      user: { _id: user._id, email: user.email },
+      sessionId,
     };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
-    const secret = process.env.JWT_SECRET;
-    const options = { expiresIn: "1d" };
-
-    const token = jwt.sign(playload, secret, options);
-
-    // Set the token as a cookie
-
+    // Set token as a cookie
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
       sameSite: "strict",
       secure: true,
     });
-
-    // Send the response
 
     res.status(200).json({
       user,
@@ -107,9 +105,31 @@ export const signIn = async (req, res) => {
       message: "User logged in successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Error saving user data",
-      error: error.message,
+    res.status(500).json({ message: "Error logging in", error: error.message });
+  }
+};
+
+// Sign out
+export const signOut = async (req, res) => {
+  try {
+    console.log(req);
+
+    const userId = req.user._id; // Assuming `req.user` is set by the middleware
+
+    // Clear the sessionId in the user's record
+    await Auth.findByIdAndUpdate(userId, { sessionId: null });
+
+    // Clear the JWT cookie
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
     });
+
+    res.status(200).json({ message: "User signed out successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error signing out", error: error.message });
   }
 };

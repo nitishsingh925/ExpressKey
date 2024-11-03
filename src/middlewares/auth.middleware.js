@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
+import { Auth } from "../model/auth.model.js";
 
 const AuthMiddleware = async (req, res, next) => {
   try {
-    const cookie_token = req.cookies?.token; // Cookie Token
-    const header_token = req.headers.authorization?.split(" ")[1]; // Header Token
-
+    const cookie_token = req.cookies?.token;
+    const header_token = req.headers.authorization?.split(" ")[1];
     const usedToken = cookie_token || header_token;
 
     if (!usedToken) {
@@ -14,13 +14,22 @@ const AuthMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(usedToken, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    // Retrieve user and check if sessionId matches
+    const user = await Auth.findById(decoded.user._id);
+    if (!user || user.sessionId !== decoded.sessionId) {
+      return res
+        .status(403)
+        .json({ message: "Session invalid, please log in again" });
+    }
+
+    req.user = decoded.user; // Attach user to request
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Not Authorized" });
+      return res.status(401).json({ message: "Not Authorized: Token expired" });
     }
-    return res.status(501).json({ message: "Something is missing!" });
+    return res.status(500).json({ message: "Authentication error" });
   }
 };
 
