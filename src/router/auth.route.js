@@ -7,6 +7,7 @@ const router = Router();
 
 router.post("/signup", signUp);
 router.post("/signin", signIn);
+// add auth middleware
 router.post("/signout", AuthMiddleware, signOut);
 
 export default router;
