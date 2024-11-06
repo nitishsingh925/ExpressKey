@@ -112,8 +112,6 @@ export const signIn = async (req, res) => {
 // Sign out
 export const signOut = async (req, res) => {
   try {
-    console.log(req);
-
     const userId = req.user._id; // Assuming `req.user` is set by the middleware
 
     // Clear the sessionId in the user's record
