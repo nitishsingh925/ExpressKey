@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import AuthMiddleware from "./middlewares/auth.middleware.js";
 const app = express();
 
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 
